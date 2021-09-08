@@ -9,6 +9,7 @@ using HttpRecorder.Anonymizers;
 using HttpRecorder.Matchers;
 using HttpRecorder.Repositories;
 using HttpRecorder.Repositories.HAR;
+using Microsoft.Extensions.Logging;
 
 namespace HttpRecorder
 {
@@ -75,6 +76,21 @@ namespace HttpRecorder
         /// Gets the <see cref="HttpRecorderMode" />.
         /// </summary>
         public HttpRecorderMode Mode { get; }
+
+        /// <summary>
+        /// Creates an instance of an HTTP Handler using a name and an Ilogger for logging.
+        /// </summary>
+        /// <param name="name">The name of this HTTP Client.</param>
+        /// <param name="logger">The Ilogger to use for the repository.</param>
+        /// <param name="innerHandler">an optional inner handler.</param>
+        /// <returns>an HttpRecorderDelegatingHandler.</returns>
+        public static HttpRecorderDelegatingHandler CreateInstance(string name, ILogger logger, HttpMessageHandler innerHandler = null)
+        {
+            return new HttpRecorderDelegatingHandler(name, HttpRecorderMode.Record, null, new LoggerInteractionRepository(logger))
+            {
+                InnerHandler = innerHandler ?? new HttpClientHandler(),
+            };
+        }
 
         /// <inheritdoc />
         protected override void Dispose(bool disposing)

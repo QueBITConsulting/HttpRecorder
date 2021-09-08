@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Targets;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -24,9 +25,9 @@ namespace HttpRecorder.Repositories.HAR
             WriteIndented = true,
         };
 
-        private readonly ILogger _logger;
+        private static int logCounter;
 
-        private int _logCtr;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoggerInteractionRepository"/> class.
@@ -53,9 +54,9 @@ namespace HttpRecorder.Repositories.HAR
         /// <inheritdoc />
         public Task<Interaction> StoreAsync(Interaction interaction, CancellationToken cancellationToken = default)
         {
-            if (!_logger.IsEnabled(LogLevel.Trace))
+            if (!_logger.IsEnabled(LogLevel.Debug))
             {
-                return null;
+                return Task.FromResult<Interaction>(null);
             }
 
             if (interaction == null)
@@ -65,21 +66,14 @@ namespace HttpRecorder.Repositories.HAR
 
             if (interaction.Messages.Count == 0)
             {
-                return null;
-            }
-
-            var logsFolder = GetLogDirectory();
-
-            if (string.IsNullOrEmpty(logsFolder))
-            {
-                return null;
+                return Task.FromResult<Interaction>(null);
             }
 
             try
             {
                 var archive = new HttpArchive(interaction);
 
-                var logId = Interlocked.Increment(ref _logCtr);
+                var logId = Interlocked.Increment(ref logCounter);
 
                 var message = interaction.Messages[0];
                 var method = message.Response.RequestMessage.Method;
@@ -87,19 +81,27 @@ namespace HttpRecorder.Repositories.HAR
                 var statusCode = message.Response.StatusCode;
                 var threadId = Thread.CurrentThread.ManagedThreadId;
 
-                var folderName = Path.Combine(logsFolder, "trace", MakeValidFilename(interaction.Name));
-
-                if (!Directory.Exists(folderName))
+                var logsFolder = GetLogDirectory();
+                if (string.IsNullOrEmpty(logsFolder))
                 {
-                    Directory.CreateDirectory(folderName);
+                   _logger.LogDebug(JsonSerializer.Serialize(message, JsonOptions));
+                }
+                else
+                {
+                    var folderName = Path.Combine(logsFolder, "trace", MakeValidFilename(interaction.Name));
+
+                    if (!Directory.Exists(folderName))
+                    {
+                        Directory.CreateDirectory(folderName);
+                    }
+
+                    var fileName = MakeValidFilename($"{threadId}_{logId} {statusCode} {method} {host}.har");
+
+                    File.WriteAllText(Path.Combine(folderName, fileName), JsonSerializer.Serialize(archive, JsonOptions));
                 }
 
-                var fileName = MakeValidFilename($"{threadId}_{logId} {statusCode} {method} {host}.har");
-
-                File.WriteAllText(Path.Combine(folderName, fileName), JsonSerializer.Serialize(archive, JsonOptions));
-
                 // Return null so that caller does NOT store and append to a list internally
-                return null;
+                return Task.FromResult<Interaction>(null);
             }
             catch (Exception ex) when ((ex is IOException) || (ex is JsonException))
             {
