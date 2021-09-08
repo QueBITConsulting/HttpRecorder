@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,26 +79,86 @@ namespace HttpRecorder.Repositories.HAR
                 var message = interaction.Messages[0];
                 var method = message.Response.RequestMessage.Method;
                 var host = message.Response.RequestMessage.RequestUri.Host;
-                var statusCode = message.Response.StatusCode;
+                var statusCode = (int)message.Response.StatusCode;
                 var threadId = Thread.CurrentThread.ManagedThreadId;
 
                 var logsFolder = GetLogDirectory();
                 if (string.IsNullOrEmpty(logsFolder))
                 {
-                   _logger.LogDebug(JsonSerializer.Serialize(message, JsonOptions));
+                    _logger.LogDebug(JsonSerializer.Serialize(message, JsonOptions));
                 }
                 else
                 {
-                    var folderName = Path.Combine(logsFolder, "trace", MakeValidFilename(interaction.Name));
+                    var traceFolderName = Path.Combine(logsFolder, "trace");
+                    var folderName = Path.Combine(traceFolderName, MakeValidFilename(interaction.Name));
 
                     if (!Directory.Exists(folderName))
                     {
                         Directory.CreateDirectory(folderName);
                     }
 
-                    var fileName = MakeValidFilename($"{threadId}_{logId} {statusCode} {method} {host}.har");
+                    var fileName = MakeValidFilename($"{logId:D4} T_{threadId} S_{statusCode} {method} {host}.txt");
 
-                    File.WriteAllText(Path.Combine(folderName, fileName), JsonSerializer.Serialize(archive, JsonOptions));
+                    var sb = new StringBuilder();
+                    sb.AppendLine("INFO");
+                    sb.AppendLine($"Creator: {archive.Log.Creator}");
+                    sb.AppendLine($"Version: {archive.Log.Version}");
+                    sb.AppendLine($"Started: {message.Timings.StartedDateTime:s}");
+                    sb.AppendLine($"Elapsed: {message.Timings.Time:g}");
+                    sb.AppendLine();
+                    sb.AppendLine();
+
+                    sb.AppendLine("REQUEST");
+                    sb.AppendLine($"URI: {message.Response.RequestMessage.RequestUri}");
+                    sb.AppendLine($"Method: {message.Response.RequestMessage.Method}");
+                    foreach (var header in message.Response.RequestMessage.Headers)
+                    {
+                        sb.AppendLine($"HEADER: {header.Key}={string.Join(";", header.Value)}");
+                    }
+
+                    foreach (var property in message.Response.RequestMessage.Properties)
+                    {
+                        sb.AppendLine($"PROPERTY: {property.Key}={property.Value}");
+                    }
+
+                    sb.AppendLine("Request Body");
+                    var requestBody = message.Response.RequestMessage.Content?.ReadAsStringAsync().Result;
+                    sb.AppendLine(requestBody);
+                    sb.AppendLine();
+                    sb.AppendLine();
+
+                    sb.AppendLine("RESPONSE");
+                    sb.AppendLine($"Status: {message.Response.StatusCode}");
+                    sb.AppendLine($"Reason: {message.Response.ReasonPhrase}");
+                    foreach (var header in message.Response.Headers)
+                    {
+                        sb.AppendLine($"HEADER: {header.Key}={string.Join(";", header.Value)}");
+                    }
+
+                    sb.AppendLine("Response Body");
+                    var responseBody = message.Response.Content.ReadAsStringAsync().Result;
+                    sb.AppendLine(responseBody);
+                    sb.AppendLine();
+                    sb.AppendLine();
+
+                    File.WriteAllText(Path.Combine(folderName, fileName), sb.ToString());
+
+                    // Are we now sync because of the semaphore?
+                    // Can we insert into the har file instead of deserialize and serialize?
+                    var harFileName = MakeValidFilename($"HTTP Trace.har");
+                    var harFile = Path.Combine(traceFolderName, harFileName);
+                    if (!File.Exists(harFile))
+                    {
+                        File.WriteAllText(harFile, JsonSerializer.Serialize(archive, JsonOptions));
+                    }
+                    else
+                    {
+                        // TODO make this more better....
+                        var json = File.ReadAllText(harFile);
+                        var httpArchive = JsonSerializer.Deserialize<HttpArchive>(json, JsonOptions);
+                        httpArchive.Log.Entries.Add(new Entry(message));
+                        File.WriteAllText(harFile, JsonSerializer.Serialize(httpArchive, JsonOptions));
+                    }
                 }
 
                 // Return null so that caller does NOT store and append to a list internally

@@ -116,9 +116,11 @@ namespace HttpRecorder
                 throw new ArgumentNullException(nameof(request));
             }
 
+            var inner = InnerHandler as HttpClientHandler;
+
             if (Mode == HttpRecorderMode.Passthrough)
             {
-                var response = await base.SendAsync(request, cancellationToken);
+                var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 return response;
             }
 
@@ -145,7 +147,7 @@ namespace HttpRecorder
 
                 var start = DateTimeOffset.Now;
                 var sw = Stopwatch.StartNew();
-                var innerResponse = await base.SendAsync(request, cancellationToken);
+                var innerResponse = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 sw.Stop();
 
                 var newInteractionMessage = new InteractionMessage(
