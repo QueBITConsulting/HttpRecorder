@@ -17,6 +17,7 @@ namespace HttpRecorder.Repositories.HAR
     /// </remarks>
     public class HttpArchiveInteractionRepository : IInteractionRepository
     {
+        private readonly object _lock = new object();
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -59,13 +60,32 @@ namespace HttpRecorder.Repositories.HAR
             try
             {
                 var archive = new HttpArchive(interaction);
-                var archiveDirectory = Path.GetDirectoryName(GetFilePath(interaction.Name));
-                if (!string.IsNullOrWhiteSpace(archiveDirectory) && !Directory.Exists(archiveDirectory))
+                lock (_lock)
                 {
-                    Directory.CreateDirectory(archiveDirectory);
-                }
+                    int retryCtr = 5;
+                    while (retryCtr-- > 0)
+                    {
+                        try
+                        {
+                            var archiveDirectory = Path.GetDirectoryName(GetFilePath(interaction.Name));
+                            if (!string.IsNullOrWhiteSpace(archiveDirectory) && !Directory.Exists(archiveDirectory))
+                            {
+                                Directory.CreateDirectory(archiveDirectory);
+                            }
 
-                File.WriteAllText(GetFilePath(interaction.Name), JsonSerializer.Serialize(archive, _jsonOptions));
+                            File.WriteAllText(GetFilePath(interaction.Name), JsonSerializer.Serialize(archive, _jsonOptions));
+                        }
+                        catch (IOException)
+                        {
+                            // Allow wait and retry
+                            Thread.Sleep(1000);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Error deserializing config file", ex);
+                        }
+                    }
+                }
 
                 return Task.FromResult(archive.ToInteraction(interaction.Name));
             }

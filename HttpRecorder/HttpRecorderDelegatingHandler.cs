@@ -26,7 +26,6 @@ namespace HttpRecorder
         private readonly IRequestMatcher _matcher;
         private readonly IInteractionRepository _repository;
         private readonly IInteractionAnonymizer _anonymizer;
-        private readonly SemaphoreSlim _interactionLock = new SemaphoreSlim(1, 1);
         private bool _disposed = false;
         private HttpRecorderMode? _executionMode;
         private Interaction _interaction;
@@ -100,11 +99,6 @@ namespace HttpRecorder
                 return;
             }
 
-            if (disposing)
-            {
-                _interactionLock.Dispose();
-            }
-
             base.Dispose(disposing);
         }
 
@@ -124,49 +118,42 @@ namespace HttpRecorder
                 return response;
             }
 
-            await _interactionLock.WaitAsync();
-            try
+            await ResolveExecutionMode(cancellationToken);
+
+            if (_executionMode == HttpRecorderMode.Replay)
             {
-                await ResolveExecutionMode(cancellationToken);
-
-                if (_executionMode == HttpRecorderMode.Replay)
+                if (_interaction == null)
                 {
-                    if (_interaction == null)
-                    {
-                        _interaction = await _repository.LoadAsync(InteractionName, cancellationToken);
-                    }
-
-                    var interactionMessage = _matcher.Match(request, _interaction);
-                    if (interactionMessage == null)
-                    {
-                        throw new HttpRecorderException($"Unable to find a matching interaction for request {request.Method} {request.RequestUri}.");
-                    }
-
-                    return await PostProcessResponse(interactionMessage.Response);
+                    _interaction = await _repository.LoadAsync(InteractionName, cancellationToken);
                 }
 
-                var start = DateTimeOffset.Now;
-                var sw = Stopwatch.StartNew();
-                var innerResponse = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-                sw.Stop();
+                var interactionMessage = _matcher.Match(request, _interaction);
+                if (interactionMessage == null)
+                {
+                    throw new HttpRecorderException($"Unable to find a matching interaction for request {request.Method} {request.RequestUri}.");
+                }
 
-                var newInteractionMessage = new InteractionMessage(
-                        innerResponse,
-                        new InteractionMessageTimings(start, sw.Elapsed));
-
-                _interaction = new Interaction(
-                    InteractionName,
-                    _interaction == null ? new[] { newInteractionMessage } : _interaction.Messages.Append(newInteractionMessage));
-
-                _interaction = await _anonymizer.Anonymize(_interaction, cancellationToken);
-                _interaction = await _repository.StoreAsync(_interaction, cancellationToken);
-
-                return await PostProcessResponse(newInteractionMessage.Response);
+                return await PostProcessResponse(interactionMessage.Response);
             }
-            finally
-            {
-                _interactionLock.Release();
-            }
+
+            var start = DateTimeOffset.Now;
+            var sw = Stopwatch.StartNew();
+            var innerResponse = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            sw.Stop();
+
+            var newInteractionMessage = new InteractionMessage(
+                innerResponse,
+                new InteractionMessageTimings(start, sw.Elapsed));
+
+            _interaction = new Interaction(
+                InteractionName,
+                _interaction == null ? new[] {newInteractionMessage} : _interaction.Messages.Append(newInteractionMessage));
+
+            _interaction = await _anonymizer.Anonymize(_interaction, cancellationToken);
+            _interaction = await _repository.StoreAsync(_interaction, cancellationToken);
+
+            return await PostProcessResponse(newInteractionMessage.Response);
+
         }
 
         /// <summary>
