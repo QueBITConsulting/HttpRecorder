@@ -82,9 +82,21 @@ namespace HttpRecorder
         /// <param name="name">The name of this HTTP Client.</param>
         /// <param name="logger">The Ilogger to use for the repository.</param>
         /// <param name="innerHandler">an optional inner handler.</param>
+        /// <param name="installHandlerEvenIfLoggingIsDisabled">By default HAR logger handler is not installed if logging is not enabled. If logging will become enabled later then set this to false to install a HAR Logger handler that can be turned on or off</param>
         /// <returns>an HttpRecorderDelegatingHandler.</returns>
-        public static HttpRecorderDelegatingHandler CreateInstance(string name, ILogger logger, HttpMessageHandler innerHandler = null)
+        public static HttpMessageHandler CreateInstance(string name, ILogger logger, HttpMessageHandler innerHandler = null, bool installHandlerEvenIfLoggingIsDisabled = false)
         {
+            // If we only want a HAR Logger if logging is enabled right NOW then we should not install one if logging is disabled now.
+            if(!installHandlerEvenIfLoggingIsDisabled)
+            {
+                // If logging is disabled then NO HAR LOGGER!
+                if (!logger.IsEnabled(LogLevel.Debug))
+                {
+                    return innerHandler ?? new HttpClientHandler();
+                }
+            }
+
+            // Install a HAR LOGGER HANDLER which can be turned on or off based on logger.IsEnabled
             return new HttpRecorderDelegatingHandler(name, HttpRecorderMode.Record, null, new LoggerInteractionRepository(logger))
             {
                 InnerHandler = innerHandler ?? new HttpClientHandler(),
