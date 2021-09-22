@@ -28,7 +28,6 @@ namespace HttpRecorder
         private readonly IInteractionAnonymizer _anonymizer;
         private bool _disposed = false;
         private HttpRecorderMode? _executionMode;
-        private Interaction _interaction;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpRecorderDelegatingHandler" /> class.
@@ -87,7 +86,7 @@ namespace HttpRecorder
         public static HttpMessageHandler CreateInstance(string name, ILogger logger, HttpMessageHandler innerHandler = null, bool installHandlerEvenIfLoggingIsDisabled = false)
         {
             // If we only want a HAR Logger if logging is enabled right NOW then we should not install one if logging is disabled now.
-            if(!installHandlerEvenIfLoggingIsDisabled)
+            if (!installHandlerEvenIfLoggingIsDisabled)
             {
                 // If logging is disabled then NO HAR LOGGER!
                 if (!logger.IsEnabled(LogLevel.Debug))
@@ -122,8 +121,6 @@ namespace HttpRecorder
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var inner = InnerHandler as HttpClientHandler;
-
             if (Mode == HttpRecorderMode.Passthrough)
             {
                 var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -132,37 +129,32 @@ namespace HttpRecorder
 
             await ResolveExecutionMode(cancellationToken);
 
-            if (_executionMode == HttpRecorderMode.Replay)
-            {
-                if (_interaction == null)
-                {
-                    _interaction = await _repository.LoadAsync(InteractionName, cancellationToken);
-                }
+            //if (_executionMode == HttpRecorderMode.Replay)
+            //{
+            //    if (_interaction == null)
+            //    {
+            //        _interaction = await _repository.LoadAsync(InteractionName, cancellationToken);
+            //    }
 
-                var interactionMessage = _matcher.Match(request, _interaction);
-                if (interactionMessage == null)
-                {
-                    throw new HttpRecorderException($"Unable to find a matching interaction for request {request.Method} {request.RequestUri}.");
-                }
+            //    var interactionMessage = _matcher.Match(request, _interaction);
+            //    if (interactionMessage == null)
+            //    {
+            //        throw new HttpRecorderException($"Unable to find a matching interaction for request {request.Method} {request.RequestUri}.");
+            //    }
 
-                return await PostProcessResponse(interactionMessage.Response);
-            }
+            //    return await PostProcessResponse(interactionMessage.Response);
+            //}
 
             var start = DateTimeOffset.Now;
             var sw = Stopwatch.StartNew();
             var innerResponse = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
             sw.Stop();
 
-            var newInteractionMessage = new InteractionMessage(
-                innerResponse,
-                new InteractionMessageTimings(start, sw.Elapsed));
+            var newInteractionMessage = new InteractionMessage(innerResponse, new InteractionMessageTimings(start, sw.Elapsed));
+            var interaction = new Interaction(InteractionName, new[] { newInteractionMessage });
 
-            _interaction = new Interaction(
-                InteractionName,
-                _interaction == null ? new[] {newInteractionMessage} : _interaction.Messages.Append(newInteractionMessage));
-
-            _interaction = await _anonymizer.Anonymize(_interaction, cancellationToken);
-            _interaction = await _repository.StoreAsync(_interaction, cancellationToken);
+            interaction = await _anonymizer.Anonymize(interaction, cancellationToken);
+            interaction = await _repository.StoreAsync(interaction, cancellationToken);
 
             return await PostProcessResponse(newInteractionMessage.Response);
 

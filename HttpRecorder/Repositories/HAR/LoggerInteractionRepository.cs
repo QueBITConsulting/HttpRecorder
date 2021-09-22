@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -26,9 +27,12 @@ namespace HttpRecorder.Repositories.HAR
             WriteIndented = true,
         };
 
+        private static object _lock = new object();
         private static int logCounter;
 
         private readonly ILogger _logger;
+        private string _logDir;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoggerInteractionRepository"/> class.
@@ -72,92 +76,77 @@ namespace HttpRecorder.Repositories.HAR
 
             try
             {
+                var threadId = Thread.CurrentThread.ManagedThreadId;
+                var logsFolder = GetLogDirectory();
+
                 var archive = new HttpArchive(interaction);
 
-                var logId = Interlocked.Increment(ref logCounter);
-
-                var message = interaction.Messages[0];
-                var method = message.Response.RequestMessage.Method;
-                var host = message.Response.RequestMessage.RequestUri.Host;
-                var statusCode = (int)message.Response.StatusCode;
-                var threadId = Thread.CurrentThread.ManagedThreadId;
-
-                var logsFolder = GetLogDirectory();
-                if (string.IsNullOrEmpty(logsFolder))
+                foreach (var entry in archive.Log.Entries)
                 {
-                    _logger.LogDebug(JsonSerializer.Serialize(message, JsonOptions));
-                }
-                else
-                {
-                    var traceFolderName = Path.Combine(logsFolder, "trace");
-                    var folderName = Path.Combine(traceFolderName, MakeValidFilename(interaction.Name));
+                    var logId = Interlocked.Increment(ref logCounter);
 
-                    if (!Directory.Exists(folderName))
+                    if (string.IsNullOrEmpty(logsFolder))
                     {
-                        Directory.CreateDirectory(folderName);
-                    }
-
-                    var fileName = MakeValidFilename($"{logId:D4} T_{threadId} S_{statusCode} {method} {host}.txt");
-
-                    var sb = new StringBuilder();
-                    sb.AppendLine("INFO");
-                    sb.AppendLine($"Creator: {archive.Log.Creator}");
-                    sb.AppendLine($"Version: {archive.Log.Version}");
-                    sb.AppendLine($"Started: {message.Timings.StartedDateTime:s}");
-                    sb.AppendLine($"Elapsed: {message.Timings.Time:g}");
-                    sb.AppendLine();
-                    sb.AppendLine();
-
-                    sb.AppendLine("REQUEST");
-                    sb.AppendLine($"URI: {message.Response.RequestMessage.RequestUri}");
-                    sb.AppendLine($"Method: {message.Response.RequestMessage.Method}");
-                    foreach (var header in message.Response.RequestMessage.Headers)
-                    {
-                        sb.AppendLine($"HEADER: {header.Key}={string.Join(";", header.Value)}");
-                    }
-
-                    foreach (var property in message.Response.RequestMessage.Properties)
-                    {
-                        sb.AppendLine($"PROPERTY: {property.Key}={property.Value}");
-                    }
-
-                    sb.AppendLine("Request Body");
-                    var requestBody = message.Response.RequestMessage.Content?.ReadAsStringAsync().Result;
-                    sb.AppendLine(requestBody);
-                    sb.AppendLine();
-                    sb.AppendLine();
-
-                    sb.AppendLine("RESPONSE");
-                    sb.AppendLine($"Status: {message.Response.StatusCode}");
-                    sb.AppendLine($"Reason: {message.Response.ReasonPhrase}");
-                    foreach (var header in message.Response.Headers)
-                    {
-                        sb.AppendLine($"HEADER: {header.Key}={string.Join(";", header.Value)}");
-                    }
-
-                    sb.AppendLine("Response Body");
-                    var responseBody = message.Response.Content.ReadAsStringAsync().Result;
-                    sb.AppendLine(responseBody);
-                    sb.AppendLine();
-                    sb.AppendLine();
-
-                    File.WriteAllText(Path.Combine(folderName, fileName), sb.ToString());
-
-                    // Are we now sync because of the semaphore?
-                    // Can we insert into the har file instead of deserialize and serialize?
-                    var harFileName = MakeValidFilename($"HTTP Trace.har");
-                    var harFile = Path.Combine(traceFolderName, harFileName);
-                    if (!File.Exists(harFile))
-                    {
-                        File.WriteAllText(harFile, JsonSerializer.Serialize(archive, JsonOptions));
+                        _logger.LogDebug(JsonSerializer.Serialize(entry, JsonOptions));
                     }
                     else
                     {
-                        // TODO make this more better....
-                        var json = File.ReadAllText(harFile);
-                        var httpArchive = JsonSerializer.Deserialize<HttpArchive>(json, JsonOptions);
-                        httpArchive.Log.Entries.Add(new Entry(message));
-                        File.WriteAllText(harFile, JsonSerializer.Serialize(httpArchive, JsonOptions));
+                        var traceFolderName = Path.Combine(logsFolder, "trace");
+                        var folderName = Path.Combine(traceFolderName, MakeValidFilename(interaction.Name));
+
+                        if (!Directory.Exists(folderName))
+                        {
+                            Directory.CreateDirectory(folderName);
+                        }
+
+                        var fileName = MakeValidFilename($"{logId:D4} T-{threadId} {entry.Request.Method} {entry.Response.Status} {entry.Request.Url.Host}.txt");
+
+                        var sb = new StringBuilder();
+                        sb.AppendLine("INFO");
+                        sb.AppendLine($"Creator: {archive.Log.Creator}");
+                        sb.AppendLine($"Version: {archive.Log.Version}");
+                        sb.AppendLine($"Started: {entry.StartedDateTime:s}");
+                        sb.AppendLine($"Elapsed: {entry.Timings.Wait} ms");
+                        sb.AppendLine();
+
+                        sb.AppendLine("REQUEST");
+                        sb.AppendLine($"{entry.Request.Method} {entry.Request.Url}");
+                        entry.Request.QueryString?.ForEach(x => sb.AppendLine($"{x.Name}={x.Value}"));
+                        entry.Request.Headers?.ForEach(x => sb.AppendLine($"{x.Name}={x.Value}"));
+                        sb.AppendLine();
+                        entry.Request.PostData?.Params.ForEach(x => sb.AppendLine($"{x.Name}={x.Value}"));
+                        sb.AppendLine(entry.Request.PostData?.Text);
+                        sb.AppendLine();
+
+                        sb.AppendLine("RESPONSE");
+                        sb.AppendLine($"Status: {entry.Response.Status}  {entry.Response.StatusText}");
+                        sb.AppendLine($"Content Size={entry.Response.Content.Size}");
+                        entry.Response.Headers?.ForEach(x => sb.AppendLine($"{x.Name}={x.Value}"));
+                        sb.AppendLine();
+                        sb.AppendLine(entry.Response.Content.Text);
+
+                        File.WriteAllText(Path.Combine(folderName, fileName), sb.ToString());
+
+                        // Are we now sync because of the semaphore?
+                        // Can we insert into the har file instead of deserialize and serialize?
+                        var harFileName = MakeValidFilename($"HTTP Trace.har");
+                        var harFile = Path.Combine(traceFolderName, harFileName);
+                        lock (_lock)
+                        {
+                            if (!File.Exists(harFile))
+                            {
+                                File.WriteAllText(harFile, JsonSerializer.Serialize(archive, JsonOptions));
+                            }
+                            else
+                            {
+                                var json = File.ReadAllText(harFile);
+                                var endArray = json.LastIndexOf(']');
+                                if (endArray == -1)
+                                    return null;
+                                json = json.Insert(endArray, JsonSerializer.Serialize(entry, JsonOptions));
+                                File.WriteAllText(harFile, json);
+                            }
+                        }
                     }
                 }
 
@@ -179,6 +168,26 @@ namespace HttpRecorder.Repositories.HAR
 
         private string GetLogDirectory(string filename = null)
         {
+            if (_logDir != null) return _logDir;
+
+            if (_logger.GetType().Name == "FileLogger")
+            {
+                try
+                {
+                    var fileName = _logger.GetType().GetProperty("Filename").GetValue(_logger, null)?.ToString();
+                    var logDir = Path.GetDirectoryName(fileName);
+                    if (!string.IsNullOrEmpty(filename))
+                        logDir = Path.Combine(logDir, filename);
+
+                    _logDir = logDir;
+                    return _logDir;
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+
             // LogManager.Configuration == null curing unit testing
             if (LogManager.Configuration == null)
             {
@@ -191,11 +200,10 @@ namespace HttpRecorder.Repositories.HAR
                 var logDir = Path.GetDirectoryName(currentLogFile);
 
                 if (!string.IsNullOrEmpty(filename))
-                {
                     logDir = Path.Combine(logDir, filename);
-                }
 
-                return logDir;
+                _logDir = logDir;
+                return _logDir;
             }
 
             return null;
