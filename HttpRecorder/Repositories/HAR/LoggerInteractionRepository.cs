@@ -81,6 +81,8 @@ namespace HttpRecorder.Repositories.HAR
 
                 var archive = new HttpArchive(interaction);
 
+                MaskSensitiveData(archive);
+
                 foreach (var entry in archive.Log.Entries)
                 {
                     var logId = Interlocked.Increment(ref logCounter);
@@ -139,12 +141,20 @@ namespace HttpRecorder.Repositories.HAR
                             }
                             else
                             {
-                                var json = File.ReadAllText(harFile);
-                                var endArray = json.LastIndexOf(']');
-                                if (endArray == -1)
-                                    return null;
-                                json = json.Insert(endArray, JsonSerializer.Serialize(entry, JsonOptions));
-                                File.WriteAllText(harFile, json);
+                                var newItem = "," + Environment.NewLine;
+                                newItem += JsonSerializer.Serialize(entry, JsonOptions);
+                                newItem += Environment.NewLine;
+                                newItem += "]\r\n  }\r\n}"; // These 9 characters are very important.  Don't mess with this!
+
+                                var offset = 9;
+
+                                using (var fileStream = File.OpenWrite(harFile))
+                                {
+                                    fileStream.Seek(-offset, SeekOrigin.End);
+                                    var bytes = Encoding.UTF8.GetBytes(newItem);
+
+                                    fileStream.Write(bytes, 0, bytes.Length);
+                                }
                             }
                         }
                     }
@@ -157,6 +167,33 @@ namespace HttpRecorder.Repositories.HAR
             {
                 throw new HttpRecorderException($"Error while writing file {interaction.Name}: {ex.Message}", ex);
             }
+        }
+
+        private void MaskSensitiveData(HttpArchive archive)
+        {
+
+            foreach (var logEntry in archive.Log.Entries)
+            {
+
+                var pattern = @"(?<=password=).+?(?=(;|'|\""|$))";
+                if (logEntry.Request.PostData != null)
+                {
+                    foreach (Match m in Regex.Matches(logEntry.Request.PostData.Text, pattern, RegexOptions.Multiline))
+                    {
+                        logEntry.Request.PostData.Text = logEntry.Request.PostData.Text?.Replace(m.Value, "\"" + new string('*', m.Value.Length - 1));
+                    }
+                }
+
+                foreach (var header in logEntry.Request.Headers)
+                {
+                    if (header.Name.ToLower() == "authorization")
+                    {
+                        header.Value = "**** MASKED ****";
+                    }
+                }
+            }
+
+
         }
 
         private static string MakeValidFilename(string text)
@@ -182,9 +219,9 @@ namespace HttpRecorder.Repositories.HAR
                     _logDir = logDir;
                     return _logDir;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-
+                    _logger.LogError(new Exception("Logger looked like a FileLogger but calling for Filename failed", ex), "HAR GetLogDirectory failed.");
                 }
             }
 

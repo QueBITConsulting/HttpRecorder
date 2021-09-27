@@ -40,12 +40,6 @@ namespace HttpRecorder.Repositories.HAR
                 else
                 {
                     Text = Encoding.UTF8.GetString(content.ReadAsByteArrayAsync().Result);
-
-                    var pattern = @"(?<=password=).+?(?=(;|'|\""|$))";
-                    foreach (Match m in Regex.Matches(Text, pattern, RegexOptions.Multiline))
-                    {
-                        Text = Text?.Replace(m.Value, "\"" + new string('*', m.Value.Length - 2) + "\"");
-                    }
                 }
             }
         }
