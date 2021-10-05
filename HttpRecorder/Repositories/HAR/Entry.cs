@@ -28,6 +28,7 @@ namespace HttpRecorder.Repositories.HAR
 
             StartedDateTime = message.Timings.StartedDateTime;
             Time = Convert.ToInt64(Math.Round(message.Timings.Time.TotalMilliseconds, 0));
+            Timings.Wait = message.Timings.Time.TotalMilliseconds;
             Request = new Request(message.Response.RequestMessage);
             Response = new Response(message.Response);
         }
