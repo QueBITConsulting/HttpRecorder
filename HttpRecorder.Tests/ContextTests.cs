@@ -98,9 +98,14 @@ namespace HttpRecorder.Tests
         [Fact]
         public void ItShouldNotAllowMultipleContexts()
         {
-            using var context = new HttpRecorderContext();
-            Action act = () => { var ctx2 = new HttpRecorderContext(); };
-            act.Should().Throw<HttpRecorderException>().WithMessage("*multiple*");
+            using (var context = new HttpRecorderContext())
+            {
+                Action act = () =>
+                {
+                    var ctx2 = new HttpRecorderContext();
+                };
+                act.Should().Throw<HttpRecorderException>().WithMessage("*multiple*");
+            }
         }
     }
 }
