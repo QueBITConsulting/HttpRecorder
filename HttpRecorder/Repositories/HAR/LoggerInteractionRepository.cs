@@ -59,7 +59,7 @@ namespace HttpRecorder.Repositories.HAR
         /// <inheritdoc />
         public Task<Interaction> StoreAsync(Interaction interaction, CancellationToken cancellationToken = default)
         {
-            if (!_logger.IsEnabled(LogLevel.Debug))
+            if (!_logger.IsEnabled(LogLevel.Trace))
             {
                 return Task.FromResult<Interaction>(null);
             }

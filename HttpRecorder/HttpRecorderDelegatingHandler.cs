@@ -89,7 +89,7 @@ namespace HttpRecorder
             if (!installHandlerEvenIfLoggingIsDisabled)
             {
                 // If logging is disabled then NO HAR LOGGER!
-                if (!logger.IsEnabled(LogLevel.Debug))
+                if (!logger.IsEnabled(LogLevel.Trace))
                 {
                     return innerHandler ?? new HttpClientHandler();
                 }
