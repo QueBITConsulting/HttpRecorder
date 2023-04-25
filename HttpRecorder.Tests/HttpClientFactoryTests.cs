@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using HttpRecorder.Tests.Server;
 using Microsoft.Extensions.DependencyInjection;
+using QueBIT.HttpRecorder.Tests.Server;
 using Xunit;
 
-namespace HttpRecorder.Tests
+namespace QueBIT.HttpRecorder.Tests
 {
     [Collection(ServerCollection.Name)]
     public class HttpClientFactoryTests

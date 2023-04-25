@@ -2,10 +2,9 @@
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Web;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Describes posted data.

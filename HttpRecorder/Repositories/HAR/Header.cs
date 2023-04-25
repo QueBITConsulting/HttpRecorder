@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Net.Http.Headers;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// HTTP Header definition.

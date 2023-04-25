@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Base class for HAR messages.

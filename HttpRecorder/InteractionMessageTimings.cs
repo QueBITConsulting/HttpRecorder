@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// Information about <see cref="InteractionMessage"/> timings.

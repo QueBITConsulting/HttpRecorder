@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Represents an HTTP Archive file content (https://w3c.github.io/web-performance/specs/HAR/Overview.html).

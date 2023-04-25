@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace HttpRecorder.Tests
+namespace QueBIT.HttpRecorder.Tests
 {
     [CollectionDefinition(ServerCollection.Name)]
     public class ServerCollection : ICollectionFixture<ServerFixture>

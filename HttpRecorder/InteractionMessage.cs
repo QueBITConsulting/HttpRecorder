@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// Represents a single HTTP Interaction (Request/Response).

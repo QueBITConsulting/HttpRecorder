@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Represents an exported HTTP requests.

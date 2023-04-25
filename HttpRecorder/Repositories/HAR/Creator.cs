@@ -1,4 +1,4 @@
-﻿namespace HttpRecorder.Repositories.HAR
+﻿namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// This object contains information about the log creator application

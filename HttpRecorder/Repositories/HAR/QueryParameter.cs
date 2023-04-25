@@ -1,4 +1,4 @@
-﻿namespace HttpRecorder.Repositories.HAR
+﻿namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// HTTP QueryParameter definition.

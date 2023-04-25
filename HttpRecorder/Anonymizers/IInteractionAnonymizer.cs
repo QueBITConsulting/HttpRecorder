@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace HttpRecorder.Anonymizers
+namespace QueBIT.HttpRecorder.Anonymizers
 {
     /// <summary>
     /// Allows the alteration of <see cref="Interaction"/> to remove confidential parameters before storage.

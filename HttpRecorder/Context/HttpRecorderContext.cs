@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.Extensions.Http;
 
-namespace HttpRecorder.Context
+namespace QueBIT.HttpRecorder.Context
 {
     /// <summary>
     /// Sets a global context for the recording.

@@ -1,11 +1,11 @@
 ﻿using System.Net.Http;
-using HttpRecorder;
-using HttpRecorder.Anonymizers;
-using HttpRecorder.Matchers;
-using HttpRecorder.Repositories;
-using HttpRecorder.Repositories.HAR;
+using Microsoft.Extensions.DependencyInjection;
+using QueBIT.HttpRecorder.Anonymizers;
+using QueBIT.HttpRecorder.Matchers;
+using QueBIT.HttpRecorder.Repositories;
+using QueBIT.HttpRecorder.Repositories.HAR;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// <see cref="IHttpClientBuilder"/> extension methods.

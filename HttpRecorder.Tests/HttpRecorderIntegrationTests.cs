@@ -6,13 +6,13 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using HttpRecorder.Anonymizers;
-using HttpRecorder.Repositories;
-using HttpRecorder.Tests.Server;
 using Moq;
+using QueBIT.HttpRecorder.Anonymizers;
+using QueBIT.HttpRecorder.Repositories;
+using QueBIT.HttpRecorder.Tests.Server;
 using Xunit;
 
-namespace HttpRecorder.Tests
+namespace QueBIT.HttpRecorder.Tests
 {
     /// <summary>
     /// <see cref="HttpRecorderDelegatingHandler"/> integration tests.

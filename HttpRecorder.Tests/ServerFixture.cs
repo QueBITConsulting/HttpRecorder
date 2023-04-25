@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
-using HttpRecorder.Tests.Server;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using QueBIT.HttpRecorder.Tests.Server;
 
-namespace HttpRecorder.Tests
+namespace QueBIT.HttpRecorder.Tests
 {
     /// <summary>
     /// xUnit collection fixture that starts an ASP.NET Core server listening to a random port.

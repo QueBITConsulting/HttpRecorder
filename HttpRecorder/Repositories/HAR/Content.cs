@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Describes details about response content

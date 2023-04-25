@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// The execution mode for <see cref="HttpRecorderDelegatingHandler" />.

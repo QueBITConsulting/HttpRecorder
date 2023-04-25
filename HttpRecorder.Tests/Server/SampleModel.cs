@@ -1,4 +1,4 @@
-namespace HttpRecorder.Tests.Server
+namespace QueBIT.HttpRecorder.Tests.Server
 {
     public class SampleModel
     {

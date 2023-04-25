@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace HttpRecorder.Anonymizers
+namespace QueBIT.HttpRecorder.Anonymizers
 {
     /// <summary>
     /// <see cref="IInteractionAnonymizer"/> that uses a rule system to conceal sensitive information.

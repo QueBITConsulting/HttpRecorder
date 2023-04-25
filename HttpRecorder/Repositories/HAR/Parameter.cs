@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Base class for HTTP Archive name/value parameters.

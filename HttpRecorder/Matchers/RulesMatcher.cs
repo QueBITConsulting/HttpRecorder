@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 
-namespace HttpRecorder.Matchers
+namespace QueBIT.HttpRecorder.Matchers
 {
     /// <summary>
     /// <see cref="IRequestMatcher"/> implementation that matches <see cref="HttpRequestMessage"/>

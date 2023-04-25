@@ -2,12 +2,12 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using HttpRecorder.Context;
-using HttpRecorder.Tests.Server;
 using Microsoft.Extensions.DependencyInjection;
+using QueBIT.HttpRecorder.Context;
+using QueBIT.HttpRecorder.Tests.Server;
 using Xunit;
 
-namespace HttpRecorder.Tests
+namespace QueBIT.HttpRecorder.Tests
 {
     [Collection(ServerCollection.Name)]
     public class ContextTests

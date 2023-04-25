@@ -1,8 +1,8 @@
-﻿using HttpRecorder.Context;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace QueBIT.HttpRecorder.Context
 {
     /// <summary>
     /// <see cref="IServiceCollection"/> extension methods.

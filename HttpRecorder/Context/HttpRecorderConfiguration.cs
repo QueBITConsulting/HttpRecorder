@@ -1,10 +1,10 @@
 ﻿using System.Net.Http;
-using HttpRecorder.Anonymizers;
-using HttpRecorder.Matchers;
-using HttpRecorder.Repositories;
-using HttpRecorder.Repositories.HAR;
+using QueBIT.HttpRecorder.Anonymizers;
+using QueBIT.HttpRecorder.Matchers;
+using QueBIT.HttpRecorder.Repositories;
+using QueBIT.HttpRecorder.Repositories.HAR;
 
-namespace HttpRecorder.Context
+namespace QueBIT.HttpRecorder.Context
 {
     /// <summary>
     /// Specific configuration for a <see cref="HttpRecorderContext"/>.

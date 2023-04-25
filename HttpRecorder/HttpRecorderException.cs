@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// Represents errors that occurs related to the <see cref="HttpRecorderDelegatingHandler" /> execution,

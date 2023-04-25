@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Contains detailed info about the response.

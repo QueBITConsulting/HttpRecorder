@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using HttpRecorder.Anonymizers;
-using HttpRecorder.Matchers;
-using HttpRecorder.Repositories;
-using HttpRecorder.Repositories.HAR;
 using Microsoft.Extensions.Logging;
+using QueBIT.HttpRecorder.Anonymizers;
+using QueBIT.HttpRecorder.Matchers;
+using QueBIT.HttpRecorder.Repositories;
+using QueBIT.HttpRecorder.Repositories.HAR;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// <see cref="DelegatingHandler" /> that records HTTP interactions for integration tests.

@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Text.RegularExpressions;
 
-namespace HttpRecorder
+namespace QueBIT.HttpRecorder
 {
     /// <summary>
     /// <see cref="HttpContent"/> extension methods.

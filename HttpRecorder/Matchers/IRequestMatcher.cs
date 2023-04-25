@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace HttpRecorder.Matchers
+namespace QueBIT.HttpRecorder.Matchers
 {
     /// <summary>
     /// The <see cref="IRequestMatcher"/> is responsible from matching incoming <see cref="HttpRequestMessage"/>

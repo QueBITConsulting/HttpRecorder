@@ -1,4 +1,4 @@
-﻿namespace HttpRecorder.Repositories.HAR
+﻿namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// Describes various phases within request-response round trip. All times are specified in milliseconds.

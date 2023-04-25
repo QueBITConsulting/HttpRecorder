@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Extensions.Http;
 
-namespace HttpRecorder.Context
+namespace QueBIT.HttpRecorder.Context
 {
     /// <summary>
     /// <see cref="IHttpMessageHandlerBuilderFilter"/> that adds <see cref="HttpRecorderDelegatingHandler"/>

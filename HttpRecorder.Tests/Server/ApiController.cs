@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace HttpRecorder.Tests.Server
+namespace QueBIT.HttpRecorder.Tests.Server
 {
     [ApiController]
     public class ApiController : ControllerBase

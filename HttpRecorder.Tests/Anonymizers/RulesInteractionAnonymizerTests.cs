@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using HttpRecorder.Anonymizers;
+using QueBIT.HttpRecorder.Anonymizers;
 using Xunit;
 
-namespace HttpRecorder.Tests.Anonymizers
+namespace QueBIT.HttpRecorder.Tests.Anonymizers
 {
     public class RulesInteractionAnonymizerTests
     {

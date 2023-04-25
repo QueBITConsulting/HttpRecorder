@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Net.Http;
 using FluentAssertions;
-using HttpRecorder.Matchers;
 using Newtonsoft.Json;
+using QueBIT.HttpRecorder.Matchers;
 using Xunit;
 
-namespace HttpRecorder.Tests.Matchers
+namespace QueBIT.HttpRecorder.Tests.Matchers
 {
     public class RulesMatcherUnitTests
     {

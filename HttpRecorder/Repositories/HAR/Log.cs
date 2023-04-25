@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HttpRecorder.Repositories.HAR
+namespace QueBIT.HttpRecorder.Repositories.HAR
 {
     /// <summary>
     /// This object represents the root of the exported data.
