@@ -42,7 +42,7 @@ namespace QueBIT.HttpRecorder.Factories
                 };
             }
 
-            return new NullDelegatingHandler();
+            return new NullDelegatingHandler { InnerHandler = handler ?? new HttpClientHandler() };
         }
 
         /// <summary>
